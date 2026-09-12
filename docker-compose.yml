@@ -1,0 +1,10 @@
+services:
+  social-network-analysis:
+    build: .
+    image: social-network-analysis:latest
+    container_name: social-network-analysis
+    ports:
+      - "${PORT:-8000}:8000"
+    volumes:
+      - ./data:/app/data
+    restart: unless-stopped

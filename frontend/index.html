@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>社交网络分析服务</title>
+  <link rel="stylesheet" href="/style.css" />
+</head>
+<body>
+  <div id="app">
+    <header class="topbar">
+      <h1>社交网络分析服务</h1>
+      <span class="subtitle">图存储 · 最短路径 · 共同好友 · PageRank · 社群发现</span>
+    </header>
+
+    <div class="layout">
+      <aside class="sidebar">
+        <section class="panel">
+          <h2>数据</h2>
+          <button class="btn primary" @click="loadSample" :disabled="loading">加载样例网络</button>
+          <div class="import-area">
+            <textarea v-model="importText" placeholder='粘贴 JSON，例如：&#10;{"edges":[{"source":"a","target":"b"}]}'></textarea>
+            <button class="btn" @click="importData" :disabled="loading">导入数据</button>
+          </div>
+          <div class="stats" v-if="stats">
+            <div class="stat"><span>节点</span><b>{{ stats.nodes }}</b></div>
+            <div class="stat"><span>边</span><b>{{ stats.edges }}</b></div>
+            <div class="stat"><span>平均度</span><b>{{ stats.avg_degree }}</b></div>
+            <div class="stat"><span>密度</span><b>{{ stats.density }}</b></div>
+          </div>
+        </section>
+
+        <section class="panel">
+          <h2>最短路径 (BFS)</h2>
+          <div class="row">
+            <select v-model="pathFrom">
+              <option value="">起点</option>
+              <option v-for="n in nodeIds" :key="n" :value="n">{{ n }}</option>
+            </select>
+            <select v-model="pathTo">
+              <option value="">终点</option>
+              <option v-for="n in nodeIds" :key="n" :value="n">{{ n }}</option>
+            </select>
+          </div>
+          <button class="btn" @click="findPath" :disabled="loading || !pathFrom || !pathTo">查询路径</button>
+          <div class="result" v-if="pathResult">{{ pathResult }}</div>
+        </section>
+
+        <section class="panel">
+          <h2>共同好友</h2>
+          <div class="row">
+            <select v-model="cfA">
+              <option value="">节点 A</option>
+              <option v-for="n in nodeIds" :key="n" :value="n">{{ n }}</option>
+            </select>
+            <select v-model="cfB">
+              <option value="">节点 B</option>
+              <option v-for="n in nodeIds" :key="n" :value="n">{{ n }}</option>
+            </select>
+          </div>
+          <button class="btn" @click="findCommonFriends" :disabled="loading || !cfA || !cfB">查询共同好友</button>
+          <div class="result" v-if="commonResult">{{ commonResult }}</div>
+        </section>
+
+        <section class="panel">
+          <h2>PageRank</h2>
+          <div class="row">
+            <label>Top N</label>
+            <input type="number" v-model.number="pagerankTop" min="1" max="50" />
+            <button class="btn" @click="runPagerank" :disabled="loading">计算</button>
+          </div>
+          <ul class="rank-list" v-if="pagerankList.length">
+            <li v-for="(item, i) in pagerankList" :key="item.node">
+              <span class="rank-idx">{{ i + 1 }}</span>
+              <span class="rank-node">{{ item.node }}</span>
+              <span class="rank-score">{{ item.score }}</span>
+            </li>
+          </ul>
+        </section>
+
+        <section class="panel">
+          <h2>社群发现 (Louvain)</h2>
+          <button class="btn" @click="detectCommunities" :disabled="loading">划分社群</button>
+          <div class="result" v-if="communityInfo">
+            发现 <b>{{ communityInfo.community_count }}</b> 个社群
+          </div>
+          <div class="legend" v-if="communityInfo">
+            <span v-for="(color, cid) in communityColors" :key="cid" class="legend-item">
+              <i :style="{ background: color }"></i>社群 {{ cid }}
+            </span>
+          </div>
+        </section>
+
+        <section class="panel">
+          <h2>操作</h2>
+          <button class="btn" @click="clearHighlight" :disabled="loading">清除高亮</button>
+        </section>
+      </aside>
+
+      <main class="canvas-wrap">
+        <div id="cy" ref="cyRef"></div>
+        <div class="hint" v-if="!hasGraph">点击「加载样例网络」开始</div>
+      </main>
+    </div>
+  </div>
+
+  <script src="/vendor/vue.global.prod.js"></script>
+  <script src="/vendor/cytoscape.min.js"></script>
+  <script src="/app.js"></script>
+</body>
+</html>

@@ -1,0 +1,9 @@
+node_modules/
+__pycache__/
+*.pyc
+.env
+data/
+empty.bat 
+empty.sh
+empty.sh
+empty.sh

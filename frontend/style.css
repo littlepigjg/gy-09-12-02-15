@@ -1,0 +1,260 @@
+:root {
+  --bg: #0f1420;
+  --panel: #1a2130;
+  --panel-border: #2a3348;
+  --text: #dbe4f0;
+  --muted: #8b96ab;
+  --accent: #4c8dff;
+  --accent-2: #37d0a0;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html, body {
+  margin: 0;
+  height: 100%;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC",
+    "Microsoft YaHei", sans-serif;
+  background: var(--bg);
+  color: var(--text);
+}
+
+#app {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+}
+
+.topbar {
+  display: flex;
+  align-items: baseline;
+  gap: 12px;
+  padding: 12px 20px;
+  border-bottom: 1px solid var(--panel-border);
+  background: var(--panel);
+}
+
+.topbar h1 {
+  margin: 0;
+  font-size: 18px;
+  font-weight: 600;
+}
+
+.topbar .subtitle {
+  color: var(--muted);
+  font-size: 13px;
+}
+
+.layout {
+  flex: 1;
+  display: flex;
+  min-height: 0;
+}
+
+.sidebar {
+  width: 320px;
+  overflow-y: auto;
+  padding: 12px;
+  background: var(--panel);
+  border-right: 1px solid var(--panel-border);
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.panel {
+  background: var(--bg);
+  border: 1px solid var(--panel-border);
+  border-radius: 8px;
+  padding: 12px;
+}
+
+.panel h2 {
+  margin: 0 0 10px;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--accent);
+}
+
+.btn {
+  display: inline-block;
+  width: 100%;
+  padding: 8px 10px;
+  margin: 4px 0;
+  border: 1px solid var(--panel-border);
+  border-radius: 6px;
+  background: #232c3f;
+  color: var(--text);
+  font-size: 13px;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+.btn:hover:not(:disabled) {
+  background: #2c3850;
+}
+
+.btn.primary {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: #fff;
+  font-weight: 600;
+}
+
+.btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.import-area textarea {
+  width: 100%;
+  height: 80px;
+  margin: 4px 0;
+  padding: 8px;
+  border: 1px solid var(--panel-border);
+  border-radius: 6px;
+  background: #141a26;
+  color: var(--text);
+  font-family: monospace;
+  font-size: 12px;
+  resize: vertical;
+}
+
+.stats {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  margin-top: 8px;
+}
+
+.stat {
+  background: #141a26;
+  border-radius: 6px;
+  padding: 8px;
+  text-align: center;
+}
+
+.stat span {
+  display: block;
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.stat b {
+  font-size: 18px;
+  color: var(--accent-2);
+}
+
+.row {
+  display: flex;
+  gap: 6px;
+  margin: 6px 0;
+}
+
+.row select, .row input {
+  flex: 1;
+  min-width: 0;
+  padding: 6px;
+  border: 1px solid var(--panel-border);
+  border-radius: 6px;
+  background: #141a26;
+  color: var(--text);
+  font-size: 12px;
+}
+
+.row label {
+  align-self: center;
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.result {
+  margin-top: 8px;
+  padding: 8px;
+  background: #141a26;
+  border-radius: 6px;
+  font-size: 12px;
+  color: var(--accent-2);
+  word-break: break-all;
+}
+
+.rank-list {
+  list-style: none;
+  margin: 8px 0 0;
+  padding: 0;
+  max-height: 220px;
+  overflow-y: auto;
+}
+
+.rank-list li {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 5px 6px;
+  border-bottom: 1px solid #1f2837;
+  font-size: 12px;
+}
+
+.rank-idx {
+  color: var(--muted);
+  width: 18px;
+}
+
+.rank-node {
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.rank-score {
+  color: var(--accent-2);
+  font-family: monospace;
+}
+
+.legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 8px;
+}
+
+.legend-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 12px;
+  color: var(--muted);
+}
+
+.legend-item i {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  display: inline-block;
+}
+
+.canvas-wrap {
+  flex: 1;
+  position: relative;
+  min-width: 0;
+}
+
+#cy {
+  width: 100%;
+  height: 100%;
+  position: absolute;
+  inset: 0;
+}
+
+.hint {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  color: var(--muted);
+  font-size: 16px;
+  pointer-events: none;
+}

@@ -80,12 +80,28 @@
 
         <section class="panel">
           <h2>社群发现 (Louvain)</h2>
+          <div class="row">
+            <label>最大社群数</label>
+            <input type="number" v-model.number="maxCommunities" min="1" placeholder="不限" />
+          </div>
+          <div class="row">
+            <label>最小社群规模</label>
+            <input type="number" v-model.number="minCommunitySize" min="1" placeholder="不限" />
+          </div>
           <button class="btn" @click="detectCommunities" :disabled="loading">划分社群</button>
+          <div class="row hide-row">
+            <label class="checkbox-label">
+              <input type="checkbox" v-model="hideSmallCommunities" /> 隐藏小于
+            </label>
+            <input type="number" v-model.number="hideThreshold" min="1" :disabled="!hideSmallCommunities" />
+            <label>人的社群</label>
+          </div>
           <div class="result" v-if="communityInfo">
-            发现 <b>{{ communityInfo.community_count }}</b> 个社群
+            发现 <b>{{ communityInfo.community_count }}</b> 个社群<template v-if="hiddenCommunityIds.size">（图上已隐藏 {{ hiddenCommunityIds.size }} 个）</template>
           </div>
           <div class="legend" v-if="communityInfo">
-            <span v-for="(color, cid) in communityColors" :key="cid" class="legend-item">
+            <span v-for="(color, cid) in communityColors" :key="cid" class="legend-item"
+                  :class="{ 'legend-hidden': hiddenCommunityIds.has(String(cid)) }">
               <i :style="{ background: color }"></i>社群 {{ cid }}
             </span>
           </div>

@@ -29,8 +29,22 @@ const app = createApp({
       pagerankList: [],
       communityInfo: null,
       communityColors: {},
+      maxCommunities: null,      // 限定最终社群个数（空 = 不限制）
+      minCommunitySize: null,    // 合并规模小于该值的社群（空 = 不限制）
+      hideSmallCommunities: false, // 仅在界面上隐藏小社群，不改底层数据
+      hideThreshold: 3,
+      hiddenCommunityIds: new Set(),
       hasGraph: false,
     };
+  },
+
+  watch: {
+    hideSmallCommunities() {
+      this.applyCommunityVisibility();
+    },
+    hideThreshold() {
+      this.applyCommunityVisibility();
+    },
   },
 
   mounted() {
@@ -108,6 +122,31 @@ const app = createApp({
       ];
     },
 
+    communityQuery() {
+      // 两个参数都留空时不带任何查询参数，后端返回原始划分结果
+      const params = new URLSearchParams();
+      if (this.maxCommunities) params.set("max_communities", this.maxCommunities);
+      if (this.minCommunitySize) params.set("min_size", this.minCommunitySize);
+      const qs = params.toString();
+      return qs ? `?${qs}` : "";
+    },
+
+    applyCommunityVisibility() {
+      // 纯界面层隐藏：只切换节点 display，不改 communityInfo 数据
+      if (!this.communityInfo || !this.cy) return;
+      const hidden = new Set();
+      if (this.hideSmallCommunities && this.hideThreshold > 0) {
+        Object.entries(this.communityInfo.groups).forEach(([cid, members]) => {
+          if (members.length < this.hideThreshold) hidden.add(String(cid));
+        });
+      }
+      this.hiddenCommunityIds = hidden;
+      this.cy.nodes().forEach((node) => {
+        const cid = String(this.communityInfo.node_community[node.id()]);
+        node.style("display", hidden.has(cid) ? "none" : "element");
+      });
+    },
+
     async api(url, options = {}) {
       const resp = await fetch(url, options);
       const data = await resp.json().catch(() => ({}));
@@ -163,7 +202,7 @@ const app = createApp({
     async refresh() {
       const [graphData, communityData, stats] = await Promise.all([
         this.api("/api/graph"),
-        this.api("/api/communities"),
+        this.api(`/api/communities${this.communityQuery()}`),
         this.api("/api/stats"),
       ]);
 
@@ -192,6 +231,7 @@ const app = createApp({
 
       this.nodeIds = graphData.nodes.map((n) => n.data.id).sort();
       this.clearHighlight();
+      this.applyCommunityVisibility();
       this.cy.fit(undefined, 30);
     },
 
@@ -247,7 +287,7 @@ const app = createApp({
     },
 
     async detectCommunities() {
-      const data = await this.api("/api/communities");
+      const data = await this.api(`/api/communities${this.communityQuery()}`);
       this.communityInfo = data;
 
       const colors = {};
@@ -261,6 +301,7 @@ const app = createApp({
         const cid = data.node_community[node.id()];
         node.style("background-color", colors[cid] || "#8b96ab");
       });
+      this.applyCommunityVisibility();
     },
 
     clearHighlight() {

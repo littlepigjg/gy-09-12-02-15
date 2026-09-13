@@ -236,6 +236,33 @@ html, body {
   display: inline-block;
 }
 
+.legend-item.legend-hidden {
+  opacity: 0.35;
+  text-decoration: line-through;
+}
+
+.hide-row {
+  align-items: center;
+}
+
+.hide-row .checkbox-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  flex: none;
+}
+
+.hide-row input[type="checkbox"] {
+  flex: none;
+  width: auto;
+  margin: 0;
+}
+
+.hide-row input[type="number"] {
+  width: 56px;
+  flex: none;
+}
+
 .canvas-wrap {
   flex: 1;
   position: relative;

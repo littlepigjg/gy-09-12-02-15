@@ -235,3 +235,80 @@ def community_groups(community):
     for node, cid in community.items():
         groups.setdefault(cid, []).append(node)
     return groups
+
+
+def _nearest_community(graph, community, groups, source, sizes):
+    """为待合并社群 source 选择目标社群。
+
+    优先并入与 source 之间边权总和最大的社群（"离得最近"）；
+    若 source 没有任何外部连边（如孤立点组成的社群），
+    则并入当前规模最大的社群。
+    平局一律按社群编号升序裁决，保证结果确定可复现。
+    """
+    weights = {}
+    for node in groups[source]:
+        for nb, w in graph.adj.get(node, {}).items():
+            c = community.get(nb)
+            if c is None or c == source:
+                continue
+            weights[c] = weights.get(c, 0.0) + w
+    if weights:
+        # 连接权重降序 -> 对方规模降序 -> 编号升序
+        return max(weights, key=lambda c: (weights[c], sizes[c], -c))
+    # 孤立社群：并入规模最大的社群（平局取编号小者）
+    return max((c for c in groups if c != source), key=lambda c: (sizes[c], -c))
+
+
+def _relabel_by_size(community, groups):
+    """按社群规模降序重新编号（最大社群为 0），平局按原编号升序。"""
+    order = sorted(groups, key=lambda c: (-len(groups[c]), c))
+    new_id = {c: i for i, c in enumerate(order)}
+    return {node: new_id[cid] for node, cid in community.items()}
+
+
+def merge_small_communities(graph, community, max_communities=None, min_size=None):
+    """社群划分后处理：将零散小社群并入"离得最近"的社群。
+
+    两种触发条件（可单独或同时使用）：
+    - max_communities: 限定最终社群个数，超出时从最小社群开始逐轮合并；
+    - min_size: 规模小于该值的社群被合并。
+
+    两个参数均为 None（默认）时不做任何处理、原样返回，
+    保证不调整参数时划分结果与原始 Louvain 输出完全一致。
+    每轮合并当前规模最小的社群（平局取编号小者），目标社群由
+    _nearest_community 按连接强度选出；整个过程确定可复现。
+    只有实际发生过合并时才重新压缩编号，未合并时编号保持原样。
+    """
+    if not community or (max_communities is None and min_size is None):
+        return community
+
+    groups = community_groups(community)
+    if len(groups) <= 1:
+        # 空网络或只有一个社群：无可合并
+        return community
+
+    # 拷贝，避免改动调用方持有的原始划分
+    community = dict(community)
+    groups = {cid: list(members) for cid, members in groups.items()}
+
+    limit = max(1, int(max_communities)) if max_communities is not None else None
+
+    merged_any = False
+    while len(groups) > 1:
+        sizes = {cid: len(members) for cid, members in groups.items()}
+        too_small = min_size is not None and min(sizes.values()) < min_size
+        too_many = limit is not None and len(groups) > limit
+        if not (too_small or too_many):
+            break
+
+        smallest = min(sizes, key=lambda c: (sizes[c], c))
+        target = _nearest_community(graph, community, groups, smallest, sizes)
+
+        for node in groups[smallest]:
+            community[node] = target
+        groups[target].extend(groups.pop(smallest))
+        merged_any = True
+
+    if merged_any:
+        community = _relabel_by_size(community, groups)
+    return community

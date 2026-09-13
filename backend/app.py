@@ -132,8 +132,21 @@ def api_pagerank():
 
 @app.route("/api/communities", methods=["GET"])
 def api_communities():
-    """返回社群划分结果与每个节点所属社群。"""
+    """返回社群划分结果与每个节点所属社群。
+
+    可选查询参数（均不传时返回原始 Louvain 结果，与历史行为完全一致）：
+    - max_communities: 限定最终社群个数，零散小社群并入最近的社群
+    - min_size: 规模小于该值的社群并入最近的社群
+    """
     community = algorithms.louvain(graph)
+
+    max_communities = request.args.get("max_communities", type=int)
+    min_size = request.args.get("min_size", type=int)
+    if max_communities is not None or min_size is not None:
+        community = algorithms.merge_small_communities(
+            graph, community, max_communities=max_communities, min_size=min_size
+        )
+
     groups = algorithms.community_groups(community)
     return jsonify(
         {
